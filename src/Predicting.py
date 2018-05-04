@@ -9,6 +9,10 @@ import json
 
 BINS_N = 50
 
+# TODO
+# Test on Training, split it into two parts and do the schmilblik
+# Compute metrics and evaluate models
+
 def training(target, model, f_in="../data/training_treated.csv"):
     data = pd.DataFrame(pd.read_csv(f_in, sep=";", header=0))
     data = data.apply(pd.to_numeric, errors='ignore')

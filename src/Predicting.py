@@ -19,13 +19,20 @@ def training(target, model, f_in="../data/training_treated.csv"):
     Y_train = data.loc[:,target]
 
     model.fit(X_train, Y_train)
-    return model, model.score(X_train, Y_train)
+    return model, model.score(X_train, Y_train), X_train, Y_train
 
 def testing(model, f_in="../data/test_treated.csv"):
     data = pd.DataFrame(pd.read_csv(f_in, sep=";", header=0))
     data = data.apply(pd.to_numeric, errors='ignore')
     X_test = data.iloc[:,:-5]
-    return(model.predict(X_test))
+    return model.predict(X_test)
+
+def error(Y_train, Y_predict):
+    error=0
+    for i in range(len(Y_train)):
+        error+=(abs(Y_train[i]-Y_predict[i])/Y_train[i])
+    train_error=error/len(Y_train)*100
+    return train_error
 
 targets = ["CapaciteEmprunt", "PrevisionnelAnnuel"]
 models =   {"Linear": linear_model.LinearRegression(),
@@ -39,7 +46,7 @@ for t in targets:
     print("Target: "+t)
     for m in models:
         print("\tStarting "+m+"...")
-        model, model_score = training(t, models[m])
+        model, model_score, X_train, Y_train = training(t, models[m])
         scores[t][m] = model_score
         prediction = testing(model)
 

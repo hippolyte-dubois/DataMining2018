@@ -40,13 +40,13 @@ def error(Y_train, Y_predict):
         error.append(abs(Y_train[i] - Y_predict[i]))
     return error
 
-"""
 targets = ["CapaciteEmprunt", "PrevisionnelAnnuel"]
 models =   {"Linear": linear_model.LinearRegression(),
             "Ridge": linear_model.Ridge(),
             "BayesianRidge": linear_model.BayesianRidge(),
             "Huber": linear_model.HuberRegressor()}
 scores = {}
+best_models = {}
 
 all_data = load_data()
 training_data = all_data.sample(frac=0.5)
@@ -54,11 +54,10 @@ test_data = all_data[~all_data.isin(training_data)].dropna()
 
 output_f = open("predicted.txt","a")
 
-best_model = None
-best_score = 0
-
 for t in targets:
     scores[t] = {}
+    best_model = None
+    best_score = 0
     print("Target: "+t)
     for m in models:
         scores[t][m] = {}
@@ -80,7 +79,6 @@ for t in targets:
         #    print(prediction[1][i] + ": " + str(prediction[0][i]), file=output_f)
 
         error_rate = error(np.array(test_data[t]), prediction[0])
-        scores[t][m]["error"] = error_rate
 
         plt.subplot(1,2,2)
         plt.hist(error_rate, bins=BINS_N, color="red", log=LOG, density=True)
@@ -88,11 +86,27 @@ for t in targets:
         plt.savefig("./images/"+str(t)+"_"+str(m)+".png")
         plt.clf()
         plt.cla()
+    best_models[t] = best_model
 
 with open("scores_prediction.json",'w+') as f_out:
     json.dump(scores,f_out, sort_keys=True, indent=4)
-"""
+
 with open("../data/test_treated.csv","r") as in_f:
-    reader = csv.DictReader(in_f)
+    out_f = open("../data/test_predicted.csv", "w+")
+    reader = csv.reader(in_f, delimiter=';')
+    writer = csv.writer(out_f, delimiter=";")
+    header = reader.__next__()
+    writer.writerow(header)
     for row in reader:
-        X = 
+        X = np.array(row[:31], dtype=np.float16).reshape(1, -1)
+        try:
+            prev_annuel = best_models["PrevisionnelAnnuel"].predict(X)
+            cap_emprunt = best_models["CapaciteEmprunt"].predict(X)
+        except ValueError:
+            print(X)
+        else:
+            out = list(X[0])
+            out.append(float(cap_emprunt[0]))
+            out.append(float(prev_annuel[0]))
+            writer.writerow(out)
+    out_f.close()

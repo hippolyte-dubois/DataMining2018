@@ -13,10 +13,12 @@ BINS_N = 50
 # Test on Training, split it into two parts and do the schmilblik
 # Compute metrics and evaluate models
 
-def training(target, model, f_in="../data/training_treated.csv"):
+def load_data(f_in="../data/training_treated.csv"):
     data = pd.DataFrame(pd.read_csv(f_in, sep=";", header=0))
     data = data.apply(pd.to_numeric, errors='ignore')
+    return data
 
+def training(target, model, data):
     X_cols = [4] + [x for x in range(7,data.shape[1])]
     X_train = data.iloc[:,X_cols]
 
@@ -25,9 +27,7 @@ def training(target, model, f_in="../data/training_treated.csv"):
     model.fit(X_train, Y_train)
     return model, model.score(X_train, Y_train), X_train, Y_train
 
-def testing(model, f_in="../data/test_treated.csv"):
-    data = pd.DataFrame(pd.read_csv(f_in, sep=";", header=0))
-    data = data.apply(pd.to_numeric, errors='ignore')
+def testing(model, data):
     X_test = data.iloc[:,:-5]
     return model.predict(X_test)
 
@@ -45,14 +45,18 @@ models =   {"Linear": linear_model.LinearRegression(),
             "Huber": linear_model.HuberRegressor()}
 scores = {}
 
+all_data = load_data()
+training_data = all_data
+test_data = all_data
+
 for t in targets:
     scores[t] = {}
     print("Target: "+t)
     for m in models:
         print("\tStarting "+m+"...")
-        model, model_score, X_train, Y_train = training(t, models[m])
+        model, model_score, X_train, Y_train = training(t, models[m], data=training_data)
         scores[t][m] = model_score
-        prediction = testing(model)
+        prediction = testing(model, data=test_data)
 
         plt.hist(prediction, bins=BINS_N, color="blue", log=True, density=True)
         plt.ylabel("Predicted " + str(t))

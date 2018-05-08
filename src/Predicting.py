@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn import linear_model, metrics
 import numpy as np
 import matplotlib.pyplot as plt
-import json, io
+import json, io, csv
 
 BINS_N = 50
 LOG=True
@@ -40,6 +40,7 @@ def error(Y_train, Y_predict):
         error.append(abs(Y_train[i] - Y_predict[i]))
     return error
 
+"""
 targets = ["CapaciteEmprunt", "PrevisionnelAnnuel"]
 models =   {"Linear": linear_model.LinearRegression(),
             "Ridge": linear_model.Ridge(),
@@ -53,13 +54,20 @@ test_data = all_data[~all_data.isin(training_data)].dropna()
 
 output_f = open("predicted.txt","a")
 
+best_model = None
+best_score = 0
+
 for t in targets:
     scores[t] = {}
     print("Target: "+t)
     for m in models:
+        scores[t][m] = {}
         print("\tStarting "+m+"...")
         model, model_score, X_train, Y_train = training(t, models[m], data=training_data)
-        scores[t][m] = model_score
+        if model_score > best_score:
+            best_model = model
+            best_score = model_score
+        scores[t][m]["score"] = model_score
         prediction = testing(model, data=test_data)
 
         #plt.tight_layout()
@@ -72,6 +80,8 @@ for t in targets:
         #    print(prediction[1][i] + ": " + str(prediction[0][i]), file=output_f)
 
         error_rate = error(np.array(test_data[t]), prediction[0])
+        scores[t][m]["error"] = error_rate
+
         plt.subplot(1,2,2)
         plt.hist(error_rate, bins=BINS_N, color="red", log=LOG, density=True)
         plt.xlabel("Distance to the real value (histogram)")
@@ -81,3 +91,8 @@ for t in targets:
 
 with open("scores_prediction.json",'w+') as f_out:
     json.dump(scores,f_out, sort_keys=True, indent=4)
+"""
+with open("../data/test_treated.csv","r") as in_f:
+    reader = csv.DictReader(in_f)
+    for row in reader:
+        X = 

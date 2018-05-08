@@ -46,8 +46,8 @@ models =   {"Linear": linear_model.LinearRegression(),
 scores = {}
 
 all_data = load_data()
-training_data = all_data
-test_data = all_data
+training_data = all_data.sample(frac=2)
+test_data = all_data.substract(training_data)
 
 for t in targets:
     scores[t] = {}

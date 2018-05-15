@@ -11,14 +11,25 @@ import json
 def load_data(f_in="../data/training_treated.csv"):
     data = pd.DataFrame(pd.read_csv(f_in, sep=";", header=0))
     data = data.apply(pd.to_numeric, errors='ignore')
-    #TODO => Recupérer uniquement les lignes qui ont un secteur (sum cols 1+2+3 == 1)
+    #Recupère uniquement les lignes qui ont un secteur (col 1, 2 ou 3 == 1)
+    data = data.loc[(data.Secteur1 == 1) | (data.Secteur2 == 1) | (data.SecteurParticulier == 1)]
     return data
 
 def training(model, data):
     X_cols = [4] + [x for x in range(7,data.shape[1])]
     X_train = data.iloc[:,X_cols]
 
-    Y_cols = [1,2,3]
+    #Y_cols = ["Secteur1","Secteur2","SecteurParticulier"]
+    Y_cols = ["Secteur1"]
+
+    #https://stackoverflow.com/questions/31306390/sklearn-classifier-get-valueerror-bad-input-shape
+
+    #"each data should map to just one target.
+    #If I want to predict two type targets. I need two distinct targets
+    #Then use the two targets and original data to train two classifier for each target."
+
+    #Well .. shit ....
+    
     Y_train = data.loc[:,Y_cols]
 
     model.fit(X_train, Y_train)
@@ -40,12 +51,13 @@ training_data = all_data.sample(frac=0.5)
 test_data = all_data[~all_data.isin(training_data)].dropna()
 
 for m in models:
-	print("Model : "+m)
-	scores[m] = {}
-	model, model_score, X_train, Y_train = training(t, models[m], data=training_data)
+    print("Model : "+m)
+    scores[m] = {}
+    model, model_score, X_train, Y_train = training(models[m], data=training_data)
     scores[m]["score"] = model_score
     prediction = testing(model, data=test_data)
 
+    print(scores)
     #TODO print le bordel
 
     #TODO faire la matrice de confusion

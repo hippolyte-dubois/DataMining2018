@@ -12,7 +12,8 @@ def load_data(f_in="../data/training_treated.csv"):
     data = pd.DataFrame(pd.read_csv(f_in, sep=";", header=0))
     data = data.apply(pd.to_numeric, errors='ignore')
     #Recupère uniquement les lignes qui ont un secteur (col 1, 2 ou 3 == 1)
-    data = data.loc[(data.Secteur1 == 1) | (data.Secteur2 == 1) | (data.SecteurParticulier == 1)]
+    #data = data.loc[(data.Secteur1 == 1) | (data.Secteur2 == 1) | (data.SecteurParticulier == 1)]
+    data = data.loc[(data.Secteur > 0)]
     return data
 
 def training(model, data):
@@ -20,15 +21,17 @@ def training(model, data):
     X_train = data.iloc[:,X_cols]
 
     #Y_cols = ["Secteur1","Secteur2","SecteurParticulier"]
-    Y_cols = ["Secteur1"]
+    Y_cols = ["Secteur"]
 
-    #https://stackoverflow.com/questions/31306390/sklearn-classifier-get-valueerror-bad-input-shape
+    '''https://stackoverflow.com/questions/31306390/sklearn-classifier-get-valueerror-bad-input-shape
 
-    #"each data should map to just one target.
-    #If I want to predict two type targets. I need two distinct targets
-    #Then use the two targets and original data to train two classifier for each target."
+    "each data should map to just one target.
+    If I want to predict two type targets. I need two distinct targets
+    Then use the two targets and original data to train two classifier for each target."
 
-    #Well .. shit ....
+    Well .. shit ....
+
+    !! Fusionner les 3 colonnes en 1 seule avec un score (1 pour secteur 1 // 2 pour sect 2 // 3 pour particulier)'''
     
     Y_train = data.loc[:,Y_cols]
 
@@ -58,6 +61,7 @@ for m in models:
     prediction = testing(model, data=test_data)
 
     print(scores)
+    print(prediction)
     #TODO print le bordel
 
     #TODO faire la matrice de confusion

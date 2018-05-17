@@ -78,7 +78,7 @@ for t in targets:
         #for i in range(len(prediction[0])):
         #    print(prediction[1][i] + ": " + str(prediction[0][i]), file=output_f)
 
-        error_rate = error(np.array(test_data[t]), prediction[0])
+        error_rate = error(np.array(test_data[t]), prediction[0]) 
 
         plt.subplot(1,2,2)
         plt.hist(error_rate, bins=BINS_N, color="red", log=LOG, density=True)

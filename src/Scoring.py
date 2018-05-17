@@ -2,8 +2,10 @@ import warnings
 warnings.filterwarnings(action="ignore", module="scipy", message="^internal gelsd")
 
 import pandas as pd
+from pandas_ml import ConfusionMatrix
 from sklearn import linear_model
 from sklearn import svm
+from sklearn import neighbors
 import numpy as np
 import matplotlib.pyplot as plt
 import json
@@ -15,19 +17,15 @@ def load_data(f_in="../data/training_treated.csv"):
     data = pd.DataFrame(pd.read_csv(f_in, sep=";", header=0))
     data = data.apply(pd.to_numeric, errors='ignore')
     #Recupère uniquement les lignes qui ont un secteur (col 1, 2 ou 3 == 1)
-    data = data.loc[(data.Secteur1 == 1) | (data.Secteur2 == 1) | (data.SecteurParticulier == 1)]
-    #data = data.loc[(data.Secteur1 > 0)]
-    #print(data)
+    data = data.loc[(data.Secteur1) | (data.Secteur2) | (data.SecteurParticulier)]
     return data
 
 def training(target, model, data):
     X_cols = [4] + [x for x in range(7,data.shape[1])]
     X_train = data.iloc[:,X_cols]
 
-    Y_cols = [target]
-    
-    Y_train = data.loc[:,Y_cols]
-    print(len(X_train))
+    Y_train = data.loc[:,target]
+
     model.fit(X_train, Y_train)
     return model, model.score(X_train, Y_train), X_train, Y_train
 
@@ -37,7 +35,7 @@ def testing(model, data):
     X_ID = data.loc[:,"Client"]
     return model.predict(X_test), np.array(X_ID)
 
-models = {"SVC": svm.SVC()}
+models = {"SVC": svm.SVC(), "Neighbors": neighbors.KNeighborsClassifier()}
 targets = ["Secteur1", "Secteur2", "SecteurParticulier"]
 
 scores = {}
@@ -57,7 +55,6 @@ for t in targets:
 	    scores[t][m]["score"] = model_score
 	    prediction = testing(model, data=test_data)
 
-	    #TODO print le bordel
 	    plt.subplot(1,2,1)
 	    plt.hist(prediction[0], bins=BINS_N, color="blue", log=LOG, density=True)
 	    plt.ylabel("Nb of values")
@@ -71,10 +68,16 @@ for t in targets:
 	    plt.clf()
 	    plt.cla()
 
-print(scores)
+	    #TODO faire la matrice de confusion
+		#http://pandas-ml.readthedocs.io/en/latest/conf_mat.html
+		Y_pred = prediction[0]
+		Y_true = test_data[t]
+		
 
-    #TODO faire la matrice de confusion
+#TODO faire les calculs d'erreurs (les 3) et accuration, precision et tout ce bordel
 
-    #TODO faire les calculs d'erreurs (les 3) et accuration, precision et tout ce bordel
+with open("scores_prediction_sectors.json",'w+') as f_out:
+    json.dump(scores,f_out, sort_keys=True, indent=4)
 
-#TODO 
+
+#TODO appliquer les meilleurs models pour le set final

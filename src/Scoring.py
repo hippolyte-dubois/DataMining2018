@@ -6,6 +6,7 @@ from pandas_ml import ConfusionMatrix
 from sklearn import linear_model
 from sklearn import svm
 from sklearn import neighbors
+from sklearn import metrics
 import numpy as np
 import matplotlib.pyplot as plt
 import json
@@ -35,10 +36,12 @@ def testing(model, data):
     X_ID = data.loc[:,"Client"]
     return model.predict(X_test), np.array(X_ID)
 
-models = {"SVC": svm.SVC(), "Neighbors": neighbors.KNeighborsClassifier()}
+models = {"LinearSVC": svm.LinearSVC(), "Neighbors": neighbors.KNeighborsClassifier()}
 targets = ["Secteur1", "Secteur2", "SecteurParticulier"]
 
 scores = {}
+
+#Choper le meilleur model (et rajouter des models)
 
 
 all_data = load_data()
@@ -68,13 +71,22 @@ for t in targets:
 	    plt.clf()
 	    plt.cla()
 
-	    #TODO faire la matrice de confusion
-		#http://pandas-ml.readthedocs.io/en/latest/conf_mat.html
-		Y_pred = prediction[0]
-		Y_true = test_data[t]
-		
+	    #Matrice de confusion
+	    Y_pred = prediction[0]
+	    Y_true = test_data[t]
+	    confusion_matrix = ConfusionMatrix(Y_true, Y_pred)
+	    print("Confusion matrix:\n%s" % confusion_matrix)
 
-#TODO faire les calculs d'erreurs (les 3) et accuration, precision et tout ce bordel
+	    #Aucune idée de quoi faire de ces résultats, mais ils sont là
+	    print('Mean Absolute Error:', metrics.mean_absolute_error(Y_true, Y_pred))  
+	    print('Mean Squared Error:', metrics.mean_squared_error(Y_true, Y_pred))  
+	    print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(Y_true, Y_pred)))
+	    print("Recall: "+str(metrics.recall_score(Y_true,Y_pred, average='binary')))
+	    print("Precision: "+str(metrics.precision_score(Y_true,Y_pred, average='binary')))
+	    accuracy = metrics.accuracy_score(Y_true,Y_pred)
+	    print("Accuracy: "+str(accuracy))
+	    print("Error Rate: "+str(1 - accuracy))
+		
 
 with open("scores_prediction_sectors.json",'w+') as f_out:
     json.dump(scores,f_out, sort_keys=True, indent=4)

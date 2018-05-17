@@ -14,11 +14,6 @@ def training_csv(f_in="../data/training.csv", f_out="../data/training_treated.cs
                 v_out = 0
             row_out.append(v_out)
         if row[0]!='Client':
-            '''for n in [1,2,3]:
-                if row_out[n]==0:
-                    row_out[n]=False
-                else:
-                    row_out[n]=True'''
             try:
                 row_out[4] = int(row_out[4])
             except:
@@ -27,14 +22,8 @@ def training_csv(f_in="../data/training.csv", f_out="../data/training_treated.cs
             row_out[6] = float(row_out[6][1:-1])
             for n in row_out[7:]:
                 n = float(n)
-            #BITE
             for n in [1,2,3]:
-                if row[n]=='1':
-                	row_out[1]=n
-        else:
-        	row_out[1] = 'Secteur'
-        #del row_out[2,3] #Pour l'instant on les garde .. on supprimera après pasqu'il va falloir tout décaler T.T
-        #BITE
+                row_out[n] = bool(row[0])
         writer.writerow(row_out)
         del row_out
     file_in.close()

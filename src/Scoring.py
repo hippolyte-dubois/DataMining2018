@@ -9,7 +9,7 @@ from sklearn import neighbors
 from sklearn import metrics
 import numpy as np
 import matplotlib.pyplot as plt
-import json
+import json, io, csv
 
 BINS_N = 50
 LOG=True
@@ -40,6 +40,7 @@ models = {"LinearSVC": svm.LinearSVC(), "Neighbors": neighbors.KNeighborsClassif
 targets = ["Secteur1", "Secteur2", "SecteurParticulier"]
 
 scores = {}
+best_models = {}
 
 #Choper le meilleur model (et rajouter des models)
 
@@ -50,11 +51,16 @@ test_data = all_data[~all_data.isin(training_data)].dropna()
 
 for t in targets:
 	scores[t] = {}
+	best_model = None
+	best_score = 0
 	print("Target: "+t)
 	for m in models:
 	    print("Model : "+m)
 	    scores[t][m] = {}
 	    model, model_score, X_train, Y_train = training(t, models[m], data=training_data)
+	    if model_score > best_score:
+        	best_model = model
+        	best_score = model_score
 	    scores[t][m]["score"] = model_score
 	    prediction = testing(model, data=test_data)
 
@@ -86,10 +92,34 @@ for t in targets:
 	    accuracy = metrics.accuracy_score(Y_true,Y_pred)
 	    print("Accuracy: "+str(accuracy))
 	    print("Error Rate: "+str(1 - accuracy))
+	best_models[t] = best_model
 		
 
 with open("scores_prediction_sectors.json",'w+') as f_out:
     json.dump(scores,f_out, sort_keys=True, indent=4)
 
 
-#TODO appliquer les meilleurs models pour le set final
+#Appliquer les meilleurs models pour le set final
+with open("../data/test_predicted.csv","r") as in_f:
+    out_f = open("../data/test_predicted_final.csv", "w+")
+    reader = csv.reader(in_f, delimiter=';')
+    writer = csv.writer(out_f, delimiter=";")
+    header = reader.__next__()
+    writer.writerow(header)
+    for row in reader:
+        X = np.array(row[:31], dtype=np.float16).reshape(1, -1)
+        try:
+            Secteur1 = best_models["Secteur1"].predict(X)
+            Secteur2 = best_models["Secteur2"].predict(X)
+            SecteurParticulier = best_models["SecteurParticulier"].predict(X)
+        except ValueError:
+            print(X)
+        else:
+            out = list(X[0])
+            out.append(float(row[31]))
+            out.append(float(row[32]))
+            out.append(float(Secteur1[0]))
+            out.append(float(Secteur2[0]))
+            out.append(float(SecteurParticulier[0]))
+            writer.writerow(out)
+    out_f.close()

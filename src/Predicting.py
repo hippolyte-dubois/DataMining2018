@@ -95,9 +95,9 @@ def main():
 
     # On sélectionne le meilleur modèle, on le rentraine avec toutes les données cette fois ci
     model_cap_emprunt = treatment("CapaciteEmprunt", scores, models, all_data)
-    model_cap_emprunt, cap_score, X_cap, Y_cap = training("CapaciteEmprunt", model_cap_emprunt, all_data)
+    model_cap_emprunt, cap_score, X_cap, Y_cap = training("CapaciteEmprunt", linear_model.LinearRegression(), all_data)
     model_prev_annuel = treatment("PrevisionnelAnnuel", scores, models, all_data)
-    model_prev_annuel, pre_score, X_pre, Y_pre = training("PrevisionnelAnnuel", model_prev_annuel, all_data)
+    model_prev_annuel, pre_score, X_pre, Y_pre = training("PrevisionnelAnnuel", linear_model.LinearRegression(), all_data)
 
     with open("scores_prediction.json",'w+') as f_out:
         json.dump(scores,f_out, sort_keys=True, indent=4)

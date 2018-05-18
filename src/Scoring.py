@@ -131,13 +131,15 @@ with open("../data/test_predicted.csv","r") as in_f:
     best_models["Secteur2"], model_score, X_train, Y_train = training("Secteur2", neighbors.KNeighborsClassifier(), data=all_data)
     best_models["SecteurParticulier"], model_score, X_train, Y_train = training("SecteurParticulier", neighbors.KNeighborsClassifier(), data=all_data)
     for row in reader:
-        X = np.array(row[:31], dtype=np.float16).reshape(1, -1)
+        X = np.array(row[:31], dtype=np.float32).reshape(1, -1)
         try:
             Secteur1 = best_models["Secteur1"].predict(X)
             Secteur2 = best_models["Secteur2"].predict(X)
             SecteurParticulier = best_models["SecteurParticulier"].predict(X)
-        except ValueError:
-            print(X)
+        except ValueError as e:
+            print("Error. Line:")
+            print(row)
+            print(e)
         else:
             out = list(X[0])
             out.append(float(row[31]))

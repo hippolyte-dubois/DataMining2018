@@ -45,18 +45,21 @@ scores = {}
 measures = {}
 best_models = {}
 
+#Split data in half to make measurements
 all_data = load_data()
 training_data = all_data.sample(frac=0.5)
 test_data = all_data[~all_data.isin(training_data)].dropna()
 
+#Pour chaque variable cible
 for t in targets:
 	scores[t] = {}
 	measures[t] = {"Recall":{},"Precision":{},"Accuracy":{},"Error Rate":{}}
 	best_model = None
 	best_score = 0
 	print("Target: "+t)
+	#Pour chaque model
 	for m in models:
-	    print("Model : "+m)
+	    print("\tModel : "+m)
 	    scores[t][m] = {}
 	    model, model_score, X_train, Y_train = training(t, models[m], data=training_data)
 	    if model_score > best_score:
@@ -64,6 +67,8 @@ for t in targets:
         	best_score = model_score
 	    scores[t][m]["score"] = model_score
 	    prediction = testing(model, data=test_data)
+
+	    # === Création d'Histogrammes ===
 
 	    plt.subplot(1,2,1)
 	    plt.hist(prediction[0], bins=BINS_N, color="blue", log=LOG, density=True)
@@ -79,16 +84,19 @@ for t in targets:
 	    plt.clf()
 	    plt.cla()
 
-	    #Matrice de confusion
+	    # === Matrice de confusion ===
+
 	    Y_pred = prediction[0]
 	    Y_true = test_data[t]
 	    confusion_matrix = ConfusionMatrix(Y_true, Y_pred)
-	    print("Confusion matrix:\n%s" % confusion_matrix)
+	    #print("Confusion matrix:\n%s" % confusion_matrix)
 
-	    #Aucune idée de quoi faire de ces résultats, mais ils sont là
-	    print('Mean Absolute Error:', metrics.mean_absolute_error(Y_true, Y_pred))  
-	    print('Mean Squared Error:', metrics.mean_squared_error(Y_true, Y_pred))  
-	    print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(Y_true, Y_pred)))
+	    # === Measures ===
+
+	    #print('Mean Absolute Error:', metrics.mean_absolute_error(Y_true, Y_pred))  
+	    #print('Mean Squared Error:', metrics.mean_squared_error(Y_true, Y_pred))  
+	    #print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(Y_true, Y_pred)))
+
 	    #print("Recall: "+str(metrics.recall_score(Y_true,Y_pred, average='binary')))
 	    #print("Precision: "+str(metrics.precision_score(Y_true,Y_pred, average='binary')))
 	    accuracy = metrics.accuracy_score(Y_true,Y_pred)
@@ -102,9 +110,11 @@ for t in targets:
 	best_models[t] = best_model
 		
 
+#Noter les scores dans un fichier exterieur pour les lire plus facilement
 with open("scores_prediction_sectors.json",'w+') as f_out:
     json.dump(scores,f_out, sort_keys=True, indent=4)
 
+#Noter les mesures dans un fichier exterieur
 with open("measures_prediction_sectors.json", 'w+') as f_out:
 	json.dump(measures, f_out, sort_keys=True, indent=4)
 
@@ -116,6 +126,10 @@ with open("../data/test_predicted.csv","r") as in_f:
     writer = csv.writer(out_f, delimiter=";")
     header = reader.__next__()
     writer.writerow(header)
+    #On réentraine des nouveaux modèles sur la totalité du jeu de donnée (meilleurs résultats)
+    best_models["Secteur1"], model_score, X_train, Y_train = training("Secteur1", neighbors.KNeighborsClassifier(), data=all_data)
+    best_models["Secteur2"], model_score, X_train, Y_train = training("Secteur2", neighbors.KNeighborsClassifier(), data=all_data)
+    best_models["SecteurParticulier"], model_score, X_train, Y_train = training("SecteurParticulier", neighbors.KNeighborsClassifier(), data=all_data)
     for row in reader:
         X = np.array(row[:31], dtype=np.float16).reshape(1, -1)
         try:

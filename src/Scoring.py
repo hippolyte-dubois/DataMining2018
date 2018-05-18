@@ -7,6 +7,8 @@ from sklearn import linear_model
 from sklearn import svm
 from sklearn import neighbors
 from sklearn import metrics
+from sklearn import naive_bayes
+from sklearn import tree
 import numpy as np
 import matplotlib.pyplot as plt
 import json, io, csv
@@ -36,14 +38,12 @@ def testing(model, data):
     X_ID = data.loc[:,"Client"]
     return model.predict(X_test), np.array(X_ID)
 
-models = {"LinearSVC": svm.LinearSVC(), "Neighbors": neighbors.KNeighborsClassifier()}
+models = {"LinearSVC": svm.LinearSVC(), "Neighbors": neighbors.KNeighborsClassifier(), "Gaussian": naive_bayes.GaussianNB(), "DecisionTree": tree.DecisionTreeClassifier(max_depth=5)}
 targets = ["Secteur1", "Secteur2", "SecteurParticulier"]
 
 scores = {}
+measures = {}
 best_models = {}
-
-#Choper le meilleur model (et rajouter des models)
-
 
 all_data = load_data()
 training_data = all_data.sample(frac=0.5)
@@ -51,6 +51,7 @@ test_data = all_data[~all_data.isin(training_data)].dropna()
 
 for t in targets:
 	scores[t] = {}
+	measures[t] = {"Recall":{},"Precision":{},"Accuracy":{},"Error Rate":{}}
 	best_model = None
 	best_score = 0
 	print("Target: "+t)
@@ -72,6 +73,7 @@ for t in targets:
 	    plt.subplot(1,2,2)
 	    plt.hist(np.array(test_data[t]), bins=BINS_N, color="red", log=LOG, density=True)
 	    plt.xlabel("Real "+str(t))
+	    plt.title(m)
 
 	    plt.savefig("./images/"+str(t)+"_"+str(m)+".png")
 	    plt.clf()
@@ -87,16 +89,24 @@ for t in targets:
 	    print('Mean Absolute Error:', metrics.mean_absolute_error(Y_true, Y_pred))  
 	    print('Mean Squared Error:', metrics.mean_squared_error(Y_true, Y_pred))  
 	    print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(Y_true, Y_pred)))
-	    print("Recall: "+str(metrics.recall_score(Y_true,Y_pred, average='binary')))
-	    print("Precision: "+str(metrics.precision_score(Y_true,Y_pred, average='binary')))
+	    #print("Recall: "+str(metrics.recall_score(Y_true,Y_pred, average='binary')))
+	    #print("Precision: "+str(metrics.precision_score(Y_true,Y_pred, average='binary')))
 	    accuracy = metrics.accuracy_score(Y_true,Y_pred)
-	    print("Accuracy: "+str(accuracy))
-	    print("Error Rate: "+str(1 - accuracy))
+	    #print("Accuracy: "+str(accuracy))
+	    #print("Error Rate: "+str(1 - accuracy))
+
+	    measures[t]["Recall"][m] = str(metrics.recall_score(Y_true,Y_pred, average='binary'))
+	    measures[t]["Precision"][m] = str(metrics.precision_score(Y_true,Y_pred, average='binary'))
+	    measures[t]["Accuracy"][m] = str(accuracy)
+	    measures[t]["Error Rate"][m] = str(1 - accuracy)
 	best_models[t] = best_model
 		
 
 with open("scores_prediction_sectors.json",'w+') as f_out:
     json.dump(scores,f_out, sort_keys=True, indent=4)
+
+with open("measures_prediction_sectors.json", 'w+') as f_out:
+	json.dump(measures, f_out, sort_keys=True, indent=4)
 
 
 #Appliquer les meilleurs models pour le set final

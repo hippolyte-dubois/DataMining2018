@@ -94,6 +94,7 @@ def main():
     all_data = load_data()
 
     # On sélectionne le meilleur modèle, on le rentraine avec toutes les données cette fois ci
+    # NOTE : On utilise un linear_model.LinearRegression() hardcodé plutot que automatiquement car cela causait des erreurs, il aurait fallu réécrire le script et nous manquions de temps
     model_cap_emprunt = treatment("CapaciteEmprunt", scores, models, all_data)
     model_cap_emprunt, cap_score, X_cap, Y_cap = training("CapaciteEmprunt", linear_model.LinearRegression(), all_data)
     model_prev_annuel = treatment("PrevisionnelAnnuel", scores, models, all_data)
